@@ -20,6 +20,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
         internal
         override(ERC721, ERC721Enumerable)
     {
+        require(isOwner(badgeId, to) || from == owner(), "Badge token is soulbound");
         super._beforeTokenTransfer(from, to, badgeId, batchSize);
     }
 
@@ -37,11 +38,43 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
     }
 
     // ----------------------------------------------------------------------------------------------------------------
+    // Events
+    // ----------------------------------------------------------------------------------------------------------------
+
+
+    // ----------------------------------------------------------------------------------------------------------------
     // NomadBadge
     // ----------------------------------------------------------------------------------------------------------------
-    function safeMint(address to) public onlyOwner {
+    mapping(address => uint256) private _flightIds; // by address
+    mapping(uint256 => uint256) public rewardPoints; // by badgeId
+    uint256 private _defaultPoints = 1000;
+    
+    function addFlight(uint256 _flightId, address owner) public {
+        _flightIds[owner] = _flightId;
+        // TODO add events
+    }
+
+    function isOwner(uint256 badgeId, address owner) public view returns (bool) {
+        return ownerOf(badgeId) == owner;
+    }
+
+    function runRewardProcess(address to) public onlyOwner {
         uint256 badgeId = _badgeIdCounter.current();
+        require(!_exists(badgeId), "Token already exists");
         _badgeIdCounter.increment();
         _safeMint(to, badgeId);
+        assignPoints(badgeId, to, _defaultPoints);
+        // TODO transfer ERC20 tokens
+        // TODO add events
+    }
+
+    function assignPoints(uint256 badgeId, address to, uint256 points) public {
+        require(isOwner(badgeId, to), "You can only assign points to your own tokens.");
+        rewardPoints[badgeId] = points;
+        // TODO add events
+    }
+
+    function getPoints(uint256 badgeId) public view returns (uint256) {
+        return rewardPoints[badgeId];
     }
 }
