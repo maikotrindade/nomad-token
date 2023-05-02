@@ -1,13 +1,13 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-describe("NomadToken", function () {
+describe("NomadBadge", function () {
   it("Test contract", async function () {
-    const ContractFactory = await ethers.getContractFactory("NomadToken");
+    const ContractFactory = await ethers.getContractFactory("NomadBadge");
 
     const instance = await ContractFactory.deploy();
     await instance.deployed();
 
-    expect(await instance.name()).to.equal("NomadToken");
+    expect(await instance.name()).to.equal("NomadBadge");
   });
 });
