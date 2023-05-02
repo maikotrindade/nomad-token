@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "hardhat/console.sol";
 
 contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
     using Counters for Counters.Counter;
@@ -40,7 +41,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
     // ----------------------------------------------------------------------------------------------------------------
     // Events
     // ----------------------------------------------------------------------------------------------------------------
-
+    event FlightAdded(uint256 _flightId);
 
     // ----------------------------------------------------------------------------------------------------------------
     // NomadBadge
@@ -49,9 +50,11 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
     mapping(uint256 => uint256) public rewardPoints; // by badgeId
     uint256 private _defaultPoints = 1000;
     
-    function addFlight(uint256 _flightId, address owner) public {
+    function addFlight(uint256 _flightId, address owner) public payable {
         _flightIds[owner] = _flightId;
-        // TODO add events
+        emit FlightAdded(_flightId);
+
+        console.log("Adding flight id  = %s to address = %s", _flightId ,owner); // TODO remove log
     }
 
     function isOwner(uint256 badgeId, address owner) public view returns (bool) {
