@@ -21,6 +21,6 @@ contract NomadRewardToken is ERC20, ERC20Burnable, Ownable {
         _totalSupply = 1000000 * 10 ** _decimals;
         _balances[msg.sender] = _totalSupply;
         emit Transfer(address(0), msg.sender, _totalSupply);
-         _mint(msg.sender, 100_000_000_000 * 10**18 );
+        _mint(msg.sender, 100_000_000_000 * 10**18 );
     }
 }
