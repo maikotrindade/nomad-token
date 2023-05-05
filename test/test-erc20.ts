@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import "@nomicfoundation/hardhat-toolbox";
 
 describe("NomadRewardToken", function () {
   it("Test contract NomadRewardToken creation", async function () {

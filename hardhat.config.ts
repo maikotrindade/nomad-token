@@ -1,20 +1,17 @@
+require('dotenv').config();
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-etherscan";
 
-const alchemyApiKey = process.env.ALCHEMY_API_KEY;
-const privateKey = process.env.PRIVATE_KEY;
+const alchemySepoliaUrl: string = process.env.ALCHEMY_SEPOLIA_URL!;
+const privateKey: string = process.env.PRIVATE_KEY!;
 const etherscanKey = process.env.ETHERSCAN_KEY;
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "sepolia",
+
   networks: {
-    hardhat: {
-    },
     sepolia: {
-      url: `https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}}`,
-      accounts: [`0x${privateKey!}`]
+      url: alchemySepoliaUrl,
+      accounts: [privateKey]
     }
   },
   solidity: {

@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import { NomadBadge, NomadRewardToken } from "../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import "@nomicfoundation/hardhat-toolbox";
 
 describe("NomadBadge", function () {
   
