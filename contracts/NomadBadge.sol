@@ -54,6 +54,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
     mapping(address => uint256) private _flightIds; // by address
     mapping(uint256 => address) private _owners; // by badgeId
     mapping(uint256 => uint256) public rewardPoints; // by badgeId
+    uint256 private _totalPointsDistributed = 0;
     uint256 private _defaultPoints = 1000;
     
     function addFlight(uint256 _flightId, address owner) public payable {
@@ -85,6 +86,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
     function assignPoints(uint256 badgeId, address to, uint256 points) public {
         require(isOwner(badgeId, to), "You can only assign points to your own tokens.");
         rewardPoints[badgeId] += points;
+        _totalPointsDistributed += points;
         emit RewardsPointsAssigned(badgeId, to, points);
         console.log("Points assigned = %s | total amount of = %s", points, rewardPoints[badgeId]); // TODO remove log
     }
@@ -97,5 +99,12 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
 
     function getPoints(uint256 badgeId) public view returns (uint256) {
         return rewardPoints[badgeId];
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Dev methods
+    // ----------------------------------------------------------------------------------------------------------------
+    function getTotalPointsDistributed() public view returns (uint256) {
+        return _totalPointsDistributed;
     }
 }
