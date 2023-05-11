@@ -3,21 +3,30 @@ pragma solidity ^0.8.9;
     
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import 'base64-sol/base64.sol';
 import "hardhat/console.sol";
 
-contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
+contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
     IERC20 private _erc20Token;
+    string[] layerPalette;
 
     Counters.Counter private _badgeIdCounter;
     constructor(address erc20Address) ERC721("NomadBadge", "NBG") {
         _erc20Token = IERC20(erc20Address);
     }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Events
+    // ----------------------------------------------------------------------------------------------------------------
+    event FlightAdded(uint256 _flightId);
+    event RewardsProvided(address to);
+    event RewardsPointsAssigned(uint256 badgeId, address to, uint256 points);
 
     // ----------------------------------------------------------------------------------------------------------------
     // Base Contract
@@ -29,7 +38,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
             super._beforeTokenTransfer(from, to, badgeId, batchSize);  
         }
         
-    function _burn(uint256 badgeId) internal override(ERC721) {
+    function _burn(uint256 badgeId) internal override(ERC721, ERC721URIStorage) {
         super._burn(badgeId);
     }
 
@@ -41,12 +50,40 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
         return super.supportsInterface(interfaceId);
     }
 
-    // ----------------------------------------------------------------------------------------------------------------
-    // Events
-    // ----------------------------------------------------------------------------------------------------------------
-    event FlightAdded(uint256 _flightId);
-    event RewardsProvided(address to);
-    event RewardsPointsAssigned(uint256 badgeId, address to, uint256 points);
+    function tokenURI(uint256 badgeId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return constructTokenURI(badgeId);
+    }
+
+    function constructTokenURI(uint256 badgeId) public view returns (string memory) {
+        string memory svg = generateSVG(badgeId);
+        string memory imageEncoded = Base64.encode(bytes(svg));
+        return string(
+            abi.encodePacked(
+                "data:image/svg+xml;base64,",
+                imageEncoded
+            )
+        );
+    }
+
+    function generateSVG(uint tokenId) internal view returns (string memory) {
+        // TODO get random number from Chainlink
+        uint random = 12345;
+        uint random10 = (tokenId%10);
+        return string(abi.encodePacked(
+                "<svg height='1100' width='1100' xmlns='http://www.w3.org/2000/svg' version='1.1'> ",
+                "<circle cx='", Strings.toString(random%(900-random10)),
+                "' cy='", Strings.toString(random%(1000-random10)),
+                "' r='", Strings.toString(random%(100-random10)),
+                "' stroke='black' stroke-width='3' fill='", layerPalette[random%10],"'/>",
+
+                "<circle cx='", Strings.toString(random%(902-random10)),
+                "' cy='", Strings.toString(random%(1002-random10)),
+                "' r='", Strings.toString(random%(102-random10)),
+                "' stroke='black' stroke-width='3' fill='", layerPalette[random%8],"'/>",
+
+                "</svg>"
+            ));
+    }
 
     // ----------------------------------------------------------------------------------------------------------------
     // NomadBadge
@@ -65,11 +102,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
         console.log("Adding flight id  = %s to address = %s", _flightId , owner); // TODO remove log
     }
 
-    function isOwner(uint256 badgeId, address owner) public view returns (bool) {
-        return ownerOf(badgeId) == owner;
-    }
-
-    function runRewardProcess(address to) public onlyOwner {
+        function runRewardProcess(address to) public onlyOwner {
         uint256 badgeId = _badgeIdCounter.current();
         require(!_exists(badgeId), "Token already exists");
 
@@ -81,6 +114,10 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
         emit RewardsProvided(to);
         assignPoints(badgeId, to, _defaultPoints);
         //TODO transferERC20(to, _defaultPoints);
+    }
+
+    function isOwner(uint256 badgeId, address owner) public view returns (bool) {
+        return ownerOf(badgeId) == owner;
     }
 
     function assignPoints(uint256 badgeId, address to, uint256 points) public {
@@ -106,5 +143,9 @@ contract NomadBadge is ERC721, ERC721Enumerable, Ownable {
     // ----------------------------------------------------------------------------------------------------------------
     function getTotalPointsDistributed() public view returns (uint256) {
         return _totalPointsDistributed;
+    }
+
+    function getTotalBadgesMinted() public view returns (uint256) {
+        return _badgeIdCounter.current();
     }
 }
