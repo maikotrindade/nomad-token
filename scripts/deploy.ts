@@ -35,7 +35,7 @@ function generateJson(instance: NomadRewardToken | NomadBadge, contractName: str
   const Artifact = artifacts.readArtifactSync(contractName);
 
   fs.writeFileSync(
-    contractsDir + `/${contractName}.json`,
+    contractsDir + `/${contractName}Abi.json`,
     JSON.stringify(Artifact, null, 2)
   );
 }
