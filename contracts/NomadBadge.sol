@@ -103,10 +103,10 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
                 "' r='", Strings.toString(random%(100-random10)),
                 "' stroke='black' stroke-width='3' fill='", _layerPalette[random%10],"'/>",
 
-                "<circle cx='", Strings.toString(random%(902-random10)),
-                "' cy='", Strings.toString(random%(1002-random10)),
-                "' r='", Strings.toString(random%(102-random10)),
-                "' stroke='black' stroke-width='3' fill='", _layerPalette[random%8],"'/>",
+                // "<circle cx='", Strings.toString(random%(902-random10)),
+                // "' cy='", Strings.toString(random%(1002-random10)),
+                // "' r='", Strings.toString(random%(102-random10)),
+                // "' stroke='black' stroke-width='3' fill='", _layerPalette[random%8],"'/>",
 
                 "</svg>"
             ));
