@@ -14,12 +14,34 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
     IERC20 private _erc20Token;
-    string[] layerPalette;
 
+    // ----------------------------------------------------------------------------------------------------------------
+    // Variables and Struts
+    // ----------------------------------------------------------------------------------------------------------------
     Counters.Counter private _badgeIdCounter;
-    constructor(address erc20Address) ERC721("NomadBadge", "NBG") {
-        _erc20Token = IERC20(erc20Address);
+    uint256 public constant DEFAULT_REWARD_POINTS = 1000;
+    uint256 private _totalPointsDistributed = 0;
+    string[] private _layerPalette;
+
+    enum FlightStatus {
+        ACTIVE,
+        CANCELLED,
+        SCHEDULED,
+        UNKNOWN
     }
+
+    struct Flight {
+        uint256 id;
+        FlightStatus status;
+    }
+
+    struct Passenger {
+        address passenger;
+        uint256 rewardPoints;
+    }
+
+    mapping(address => Flight) private _flights; // by passenger address
+    mapping(uint256 => Passenger) private _passengers; // by badgeId
 
     // ----------------------------------------------------------------------------------------------------------------
     // Events
@@ -29,8 +51,12 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     event RewardsPointsAssigned(uint256 badgeId, address to, uint256 points);
 
     // ----------------------------------------------------------------------------------------------------------------
-    // Base Contract
+    // Base contract functions
     // ----------------------------------------------------------------------------------------------------------------
+    constructor(address erc20Address) ERC721("NomadBadge", "NBG") {
+        _erc20Token = IERC20(erc20Address);
+    }
+    
     function _beforeTokenTransfer(address from, address to, uint256 badgeId, uint256 batchSize) 
         internal 
         override(ERC721, ERC721Enumerable) virtual {
@@ -66,7 +92,8 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     }
 
     function generateSVG(uint tokenId) internal view returns (string memory) {
-        // TODO get random number from Chainlink
+        // TODO 
+        // get random number from Chainlink
         uint random = 12345;
         uint random10 = (tokenId%10);
         return string(abi.encodePacked(
@@ -74,68 +101,74 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
                 "<circle cx='", Strings.toString(random%(900-random10)),
                 "' cy='", Strings.toString(random%(1000-random10)),
                 "' r='", Strings.toString(random%(100-random10)),
-                "' stroke='black' stroke-width='3' fill='", layerPalette[random%10],"'/>",
+                "' stroke='black' stroke-width='3' fill='", _layerPalette[random%10],"'/>",
 
                 "<circle cx='", Strings.toString(random%(902-random10)),
                 "' cy='", Strings.toString(random%(1002-random10)),
                 "' r='", Strings.toString(random%(102-random10)),
-                "' stroke='black' stroke-width='3' fill='", layerPalette[random%8],"'/>",
+                "' stroke='black' stroke-width='3' fill='", _layerPalette[random%8],"'/>",
 
                 "</svg>"
             ));
     }
 
     // ----------------------------------------------------------------------------------------------------------------
-    // NomadBadge
+    // NomadBadge functions
     // ----------------------------------------------------------------------------------------------------------------
-    mapping(address => uint256) private _flightIds; // by address
-    mapping(uint256 => address) private _owners; // by badgeId
-    mapping(uint256 => uint256) public rewardPoints; // by badgeId
-    uint256 private _totalPointsDistributed = 0;
-    uint256 private _defaultPoints = 1000;
-    
-    function addFlight(uint256 _flightId, address owner) public payable {
-        require(_flightIds[owner] != _flightId, "Flight already registered");
+    function addFlight(uint256 flightId, address passenger) public payable {
+        require(_flights[passenger].id != flightId, "Flight already registered");
 
-        _flightIds[owner] = _flightId;
-        emit FlightAdded(_flightId);
-        console.log("Adding flight id  = %s to address = %s", _flightId , owner); // TODO remove log
+        _flights[passenger].id = flightId;
+        emit FlightAdded(flightId);
+
+        // TODO remove log
+        console.log("Adding flight id  = %s to address = %s", flightId , passenger); // TODO remove log
     }
 
-        function runRewardProcess(address to) public onlyOwner {
+    function runRewardProcess(address passenger) public onlyOwner {
         uint256 badgeId = _badgeIdCounter.current();
         require(!_exists(badgeId), "Token already exists");
 
         _badgeIdCounter.increment();
-        _safeMint(to, badgeId);
-        _owners[badgeId] = to;
-        console.log("Badge generated id = %s to address = %s", badgeId, to); // TODO remove log
+        _safeMint(passenger, badgeId);
+        _passengers[badgeId].passenger = passenger;
+
+        // TODO remove log
+        console.log("Badge generated id = %s to passenger = %s", badgeId, passenger); // TODO remove log
     
-        emit RewardsProvided(to);
-        assignPoints(badgeId, to, _defaultPoints);
-        //TODO transferERC20(to, _defaultPoints);
+        emit RewardsProvided(passenger);
+        assignPoints(badgeId, passenger);
+        transferERC20(passenger);
     }
 
     function isOwner(uint256 badgeId, address owner) public view returns (bool) {
         return ownerOf(badgeId) == owner;
     }
 
-    function assignPoints(uint256 badgeId, address to, uint256 points) public {
-        require(isOwner(badgeId, to), "You can only assign points to your own tokens.");
-        rewardPoints[badgeId] += points;
-        _totalPointsDistributed += points;
-        emit RewardsPointsAssigned(badgeId, to, points);
-        console.log("Points assigned = %s | total amount of = %s", points, rewardPoints[badgeId]); // TODO remove log
+    function assignPoints(uint256 badgeId, address passenger) public {
+        require(isOwner(badgeId, passenger), "You can only assign points to your own tokens.");
+        _passengers[badgeId].rewardPoints += DEFAULT_REWARD_POINTS;
+        _totalPointsDistributed += DEFAULT_REWARD_POINTS;
+        emit RewardsPointsAssigned(badgeId, passenger, DEFAULT_REWARD_POINTS);
+
+        // TODO remove log
+        console.log(
+            "Points assigned = %s | total amount of = %s",
+             DEFAULT_REWARD_POINTS, 
+             _passengers[badgeId].rewardPoints
+        ); 
     }
 
-    // function transferERC20(address to, uint256 amount) public {
-    //     require(_erc20Token.balanceOf(owner()) >= amount, "Insufficient balance");
-    //     bool success = _erc20Token.transferFrom(owner(), to, amount);
-    //     require(success, "ERC20: Transfer failed");
-    // }
+    function transferERC20(address to) public {
+        // TODO not implement yet
+        // require(_erc20Token.balanceOf(owner()) >= Rewards.defaultPoints, "Insufficient balance");
+        // bool success = _erc20Token.transferFrom(owner(), to, Rewards.defaultPoints);
+        // require(success, "ERC20: Transfer failed");
+    }
 
     function getPoints(uint256 badgeId) public view returns (uint256) {
-        return rewardPoints[badgeId];
+        require (_passengers[badgeId].passenger == address(0), "It was not possible to get rewards points by badgeId.");
+        return _passengers[badgeId].rewardPoints;
     }
 
     // ----------------------------------------------------------------------------------------------------------------
