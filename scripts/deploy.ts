@@ -21,7 +21,7 @@ async function main() {
 
 function generateJson(instance: NomadRewardToken | NomadBadge, contractName: string) {
   const fs = require("fs");
-  const contractsDir = __dirname + "/../contract/";
+  const contractsDir = __dirname + "/../output/";
 
   if (!fs.existsSync(contractsDir)) {
     fs.mkdirSync(contractsDir);
