@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import 'base64-sol/base64.sol';
 import "hardhat/console.sol";
@@ -21,7 +23,6 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     Counters.Counter private _badgeIdCounter;
     uint256 public constant DEFAULT_REWARD_POINTS = 1000;
     uint256 private _totalPointsDistributed = 0;
-    string[] private _layerPalette;
 
     enum FlightStatus {
         ACTIVE,
@@ -82,6 +83,10 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     function constructTokenURI(uint256 badgeId) public view returns (string memory) {
         string memory svg = generateSVG(badgeId);
+
+        // Remove Log
+        console.log("%s", svg);
+
         string memory imageEncoded = Base64.encode(bytes(svg));
         return string(
             abi.encodePacked(
@@ -91,25 +96,44 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         );
     }
 
-    function generateSVG(uint tokenId) internal view returns (string memory) {
+    function generateSVG(uint tokenId) internal pure returns (string memory) {
         // TODO 
         // get random number from Chainlink
-        uint random = 12345;
+        uint random = 234;
         uint random10 = (tokenId%10);
-        return string(abi.encodePacked(
-                "<svg height='1100' width='1100' xmlns='http://www.w3.org/2000/svg' version='1.1'> ",
-                "<circle cx='", Strings.toString(random%(900-random10)),
-                "' cy='", Strings.toString(random%(1000-random10)),
-                "' r='", Strings.toString(random%(100-random10)),
-                "' stroke='black' stroke-width='3' fill='", _layerPalette[random%10],"'/>",
 
-                // "<circle cx='", Strings.toString(random%(902-random10)),
-                // "' cy='", Strings.toString(random%(1002-random10)),
-                // "' r='", Strings.toString(random%(102-random10)),
-                // "' stroke='black' stroke-width='3' fill='", _layerPalette[random%8],"'/>",
+        string memory svgTerms = 
+        "<svg height='1100' width='1100' xmlns='http://www.w3.org/2000/svg' version='1.1'> ";
 
-                "</svg>"
-            ));
+        string memory element1 = string(
+            abi.encodePacked(
+                "<circle cx='", Strings.toString(random%(920-random10)),
+                "' cy='", Strings.toString(random%(1020-random10)),
+                "' r='", Strings.toString(random%(160-random10)),
+                "' stroke='black' stroke-width='3' fill='lawngreen'/>"
+            )
+        );
+
+        string memory element2 = string(
+            abi.encodePacked(
+                "<rect x='", Strings.toString(random%(800-random10)),
+                "' y='", Strings.toString(random%(900-random10)),
+                "' width='", Strings.toString(random%(400-random10)),
+                "' height='", Strings.toString(random%(400-random10)),
+                "' stroke='black' stroke-width='1' fill='red'/>"
+            )
+        );
+
+        string memory element3 = string(
+            abi.encodePacked(
+                "<circle cx='", Strings.toString(random%(910-random10)),
+                "' cy='", Strings.toString(random%(1010-random10)),
+                "' r='", Strings.toString(random%(150-random10)),
+                "' stroke='black' stroke-width='2' fill='teal'/>"
+            )
+        );
+
+        return string(abi.encodePacked(svgTerms, element1, element2, element3, "</svg>"));
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -122,15 +146,16 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         emit FlightAdded(flightId);
 
         // TODO remove log
-        console.log("Adding flight id  = %s to address = %s", flightId , passenger); // TODO remove log
+        console.log("Adding flight id  = %s to address = %s", flightId , passenger);
     }
 
     function runRewardProcess(address passenger) public onlyOwner {
         uint256 badgeId = _badgeIdCounter.current();
         require(!_exists(badgeId), "Token already exists");
 
-        _badgeIdCounter.increment();
         _safeMint(passenger, badgeId);
+        _badgeIdCounter.increment();
+        tokenURI(badgeId);
         _passengers[badgeId].passenger = passenger;
 
         // TODO remove log
