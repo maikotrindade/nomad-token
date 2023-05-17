@@ -113,7 +113,6 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
                 "' stroke='black' stroke-width='3' fill='lawngreen'/>"
             )
         );
-
         string memory element2 = string(
             abi.encodePacked(
                 "<rect x='", Strings.toString(random%(800-random10)),
@@ -123,7 +122,6 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
                 "' stroke='black' stroke-width='1' fill='red'/>"
             )
         );
-
         string memory element3 = string(
             abi.encodePacked(
                 "<circle cx='", Strings.toString(random%(910-random10)),
@@ -159,7 +157,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         _passengers[badgeId].passenger = passenger;
 
         // TODO remove log
-        console.log("Badge generated id = %s to passenger = %s", badgeId, passenger); // TODO remove log
+        console.log("Badge generated id = %s to passenger = %s", badgeId, passenger);
     
         emit RewardsProvided(passenger);
         assignPoints(badgeId, passenger);
@@ -186,9 +184,18 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
 
     function transferERC20(address to) public {
         // TODO not implement yet
-        // require(_erc20Token.balanceOf(owner()) >= Rewards.defaultPoints, "Insufficient balance");
-        // bool success = _erc20Token.transferFrom(owner(), to, Rewards.defaultPoints);
-        // require(success, "ERC20: Transfer failed");
+        require(_erc20Token.balanceOf(owner()) >= DEFAULT_REWARD_POINTS, "Insufficient balance");
+
+        // TODO remove log
+        console.log(
+            "Owner balance = %s",
+             _erc20Token.balanceOf(owner())
+        ); 
+
+        _erc20Token.allowance(owner(), to);
+        _erc20Token.approve(owner(), DEFAULT_REWARD_POINTS);
+        
+        _erc20Token.transfer(to, DEFAULT_REWARD_POINTS);
     }
 
     function getPoints(uint256 badgeId) public view returns (uint256) {

@@ -7,10 +7,9 @@ import "@nomicfoundation/hardhat-toolbox";
 describe("NomadBadge", function () {
   
   let contractInstance: NomadBadge
+  let erc20Instance: NomadRewardToken
   let owner: SignerWithAddress
   let user: SignerWithAddress
-
-  let erc20Instance: NomadRewardToken
 
   beforeEach(async function () {
     [owner, user] = await ethers.getSigners()
