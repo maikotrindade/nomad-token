@@ -12,16 +12,20 @@ contract NomadRewardToken is ERC20, ERC20Burnable, Ownable {
     using SafeMath for uint256;
 
     mapping(address => uint256) private _balances;
-    uint256 private _totalSupply;
     string private _name;
     string private _symbol;
     uint8 private _decimals;
 
     constructor() ERC20("NomadRewardToken",  "NRT") {
         _decimals = 18;
-        _totalSupply = 1000000 * 10 ** _decimals;
-        _balances[msg.sender] = _totalSupply;
+        uint256 _totalSupply = 100_000_000_000 * 10**18;
         emit Transfer(address(0), msg.sender, _totalSupply);
-        _mint(msg.sender, 100_000_000_000 * 10**18 );
+        _mint(msg.sender, _totalSupply);
+    }
+
+    function transferRewards(address to, uint256 amount) public {
+        _approve(owner(), to, amount);
+        _transfer(owner(), to, amount);
+        emit Transfer(address(0), msg.sender, amount);
     }
 }

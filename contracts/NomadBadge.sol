@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
     
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -9,13 +8,14 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@chainlink/contracts/src/v0.8/ConfirmedOwner.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./NomadRewardToken.sol";
 import 'base64-sol/base64.sol';
 import "hardhat/console.sol";
 
 contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
-    IERC20 private _erc20Token;
+    NomadRewardToken private _erc20Token;
 
     // ----------------------------------------------------------------------------------------------------------------
     // Variables and Struts
@@ -55,7 +55,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     // Base contract functions
     // ----------------------------------------------------------------------------------------------------------------
     constructor(address erc20Address) ERC721("NomadBadge", "NBG") {
-        _erc20Token = IERC20(erc20Address);
+        _erc20Token = NomadRewardToken(erc20Address);
     }
     
     function _beforeTokenTransfer(address from, address to, uint256 badgeId, uint256 batchSize) 
@@ -161,7 +161,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     
         emit RewardsProvided(passenger);
         assignPoints(badgeId, passenger);
-        transferERC20(passenger);
+        transferERC20Rewards(passenger);
     }
 
     function isOwner(uint256 badgeId, address owner) public view returns (bool) {
@@ -182,20 +182,9 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         ); 
     }
 
-    function transferERC20(address to) public {
-        // TODO not implement yet
+    function transferERC20Rewards(address passenger) private onlyOwner {
         require(_erc20Token.balanceOf(owner()) >= DEFAULT_REWARD_POINTS, "Insufficient balance");
-
-        // TODO remove log
-        console.log(
-            "Owner balance = %s",
-             _erc20Token.balanceOf(owner())
-        ); 
-
-        _erc20Token.allowance(owner(), to);
-        _erc20Token.approve(owner(), DEFAULT_REWARD_POINTS);
-        
-        _erc20Token.transfer(to, DEFAULT_REWARD_POINTS);
+        _erc20Token.transferRewards(passenger, DEFAULT_REWARD_POINTS);
     }
 
     function getPoints(uint256 badgeId) public view returns (uint256) {
