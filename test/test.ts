@@ -30,7 +30,7 @@ describe("NomadBadge", function () {
   });
   
   it('Soulbound token: should add a flight', async function () {
-    let flightId = 12345
+    let flightId = 12345 // flight id + pax address
     
     let addFlightMethod = contractInstance.connect(owner).addFlight(flightId, owner.address)
     await expect(addFlightMethod).to.emit(contractInstance, 'FlightAdded').withArgs(flightId)
@@ -38,6 +38,16 @@ describe("NomadBadge", function () {
   
   it('Soulbound token: should provide rewards', async function () {
     const rewardsPoints = 1000;
+    let flightId = 12345 // flight id + pax address
+    
+    await contractInstance.connect(owner).addFlight(flightId, owner.address)
+    
+    const flightStatusReady = ethers.BigNumber.from("0")
+    const updateFlightStatusMethod = contractInstance.connect(owner)
+        .updateFlightStatus(flightId, flightStatusReady)
+    await expect(updateFlightStatusMethod).to.emit(contractInstance, 'FlightStatusUpdated')
+        .withArgs(flightStatusReady)
+    
     const initialOwnerBalance = await erc20Instance.connect(owner).balanceOf(owner.address)
     
     const rewardProcessMethod = contractInstance.connect(owner).runRewardProcess(user.address)
