@@ -17,6 +17,8 @@ async function main() {
 
   generateJson(rewardToken, "NomadRewardToken")
   generateJson(nomadBadge, "NomadBadge")
+
+  setupChainlinkAutomation(nomadBadge)
 }
 
 function generateJson(instance: NomadRewardToken | NomadBadge, contractName: string) {
@@ -40,6 +42,11 @@ function generateJson(instance: NomadRewardToken | NomadBadge, contractName: str
   );
 }
 
+async function setupChainlinkAutomation(contract: NomadBadge) {
+  const updateTimerInSeconds = 60 * 60; // one hour
+  await contract.setUpdateTimer(updateTimerInSeconds);
+  console.log("Chainlink automation update timer was set to: " + updateTimerInSeconds + " seconds");
+}
 
 main().catch((error) => {
   console.error(error);

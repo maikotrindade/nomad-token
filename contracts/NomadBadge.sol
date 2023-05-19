@@ -16,7 +16,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     using Chainlink for Chainlink.Request;
     using Counters for Counters.Counter;
 
-    NomadRewardToken private erc20Token;
+    NomadRewardToken private immutable erc20Token;
 
     // ----------------------------------------------------------------------------------------------------------------
     // Variables and Struts
@@ -58,6 +58,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     event FlightStatusUpdated(FlightRewardStatus status);
     event RewardsProvided(address to);
     event RewardsPointsAssigned(uint256 badgeId, address to, uint256 points);
+    event UpkeepPerformed(uint256 lastTimeStamp);
 
     // ----------------------------------------------------------------------------------------------------------------
     // Base contract functions
@@ -117,8 +118,11 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     }
 
     function performUpkeep(bytes calldata /* performData */) external override {
-        lastTimeStamp = block.timestamp;
-        runRewardProcess();
+        if ((block.timestamp - lastTimeStamp) > updateTimer ) {
+            lastTimeStamp = block.timestamp;
+            runRewardProcess();
+        }
+        emit UpkeepPerformed(lastTimeStamp);
     }
 
     function setUpdateTimer(uint256 _updateTimer) public onlyOwner {
