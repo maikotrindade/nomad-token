@@ -6,11 +6,14 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 import "./NomadRewardToken.sol";
 import 'base64-sol/base64.sol';
 import "hardhat/console.sol";
 
-contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
+contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, KeeperCompatibleInterface {
+    using Chainlink for Chainlink.Request;
     using Counters for Counters.Counter;
 
     NomadRewardToken private erc20Token;
@@ -44,6 +47,9 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     uint256[] private flightsId;
     mapping(uint256 => Flight) private flights; // by flight Id
     mapping(uint256 => Passenger) private passengers; // by badgeId
+
+    uint256 public updateTimer;
+    uint256 public lastTimeStamp;
 
     // ----------------------------------------------------------------------------------------------------------------
     // Events
@@ -79,7 +85,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         return super.supportsInterface(interfaceId);
     }
 
-    function tokenURI(uint256 badgeId) public pure override(ERC721, ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 /* badgeId */) public pure override(ERC721, ERC721URIStorage) returns (string memory) {
         return constructTokenURI();
     }
 
@@ -97,6 +103,26 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
                 imageEncoded
             )
         );
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------
+    // Chainlink Automation functions
+    // ----------------------------------------------------------------------------------------------------------------
+    function checkUpkeep(bytes calldata /* checkData */)
+        external
+        view
+        override
+        returns (bool upkeepNeeded, bytes memory /* performData */) {
+            upkeepNeeded = (block.timestamp - lastTimeStamp) > updateTimer;
+    }
+
+    function performUpkeep(bytes calldata /* performData */) external override {
+        lastTimeStamp = block.timestamp;
+        runRewardProcess();
+    }
+
+    function setUpdateTimer(uint256 _updateTimer) public onlyOwner {
+        updateTimer = _updateTimer;
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -118,13 +144,14 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         emit FlightStatusUpdated(status);
     }
 
-    function runRewardProcess(address passenger) public onlyOwner {
+    function runRewardProcess() public onlyOwner {
         for (uint index=0; index < flightsId.length; index++) {
             uint256 flightId = flightsId[index];
             if (flights[flightId].status == FlightRewardStatus.READY) {
                 uint256 badgeId = badgeIdCounter.current();
                 require(!_exists(badgeId), "Token already exists");
 
+                address passenger = flights[flightId].passenger;
                 _safeMint(passenger, badgeId);
                 badgeIdCounter.increment();
                 tokenURI(badgeId);
