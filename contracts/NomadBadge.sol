@@ -10,7 +10,6 @@ import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 import "./NomadRewardToken.sol";
 import 'base64-sol/base64.sol';
-import "hardhat/console.sol";
 
 contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, KeeperCompatibleInterface {
     using Chainlink for Chainlink.Request;
@@ -117,6 +116,9 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
             upkeepNeeded = (block.timestamp - lastTimeStamp) > updateTimer;
     }
 
+    /**
+     * Perform conditional execution of `runRewardProcess()` method 
+     */
     function performUpkeep(bytes calldata /* performData */) external override {
         if ((block.timestamp - lastTimeStamp) > updateTimer ) {
             lastTimeStamp = block.timestamp;
@@ -132,22 +134,34 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     // ----------------------------------------------------------------------------------------------------------------
     // NomadBadge functions
     // ----------------------------------------------------------------------------------------------------------------
-    function addFlight(uint256 flightId, address passenger) public payable {
+
+    /**
+     * Add flight/passenger details
+     * The contract will check the data in order to provide rewards when FlightRewardStatus changes
+     * @param flightId id of the flight
+     */
+    function addFlight(uint256 flightId) public payable {
         require(flights[flightId].id != flightId, "Flight already registered");
 
-        flights[flightId] = Flight(flightId, FlightRewardStatus.SCHEDULED, passenger);
+        flights[flightId] = Flight(flightId, FlightRewardStatus.SCHEDULED, msg.sender);
         flightsId.push(flightId);
         emit FlightAdded(flightId);
-
-        // TODO remove log
-        console.log("Adding flight id = %s to pax address %s", flightId, passenger);
     }
 
+    /**
+     * Update the flight status for a specific flight
+     * @param flightId id of the flight
+     * @param status actual status of the flight
+     */
     function updateFlightStatus(uint256 flightId, FlightRewardStatus status) public onlyOwner {
         flights[flightId].status = status;
         emit FlightStatusUpdated(status);
     }
 
+    /**
+     * Verify all the flights which are under FlightRewardStatus.READY and provide the rewards points and ERC20 tokens
+     * This method is triggered by Chainlink Automation every X time based on Chainlink's configuration 
+     */
     function runRewardProcess() public onlyOwner {
         for (uint index=0; index < flightsId.length; index++) {
             uint256 flightId = flightsId[index];
@@ -161,9 +175,6 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
                 tokenURI(badgeId);
                 passengers[badgeId].passenger = passenger;
 
-                // TODO remove log
-                console.log("Badge generated id = %s to passenger = %s", badgeId, passenger);
-            
                 emit RewardsProvided(passenger);
                 assignPoints(badgeId, passenger);
                 transferERC20Rewards(passenger);
@@ -175,20 +186,22 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
         return ownerOf(badgeId) == owner;
     }
 
+    /**
+     * Provide rewards points to the passenger
+     * @param badgeId id of the soulbound token
+     * @param passenger address of the passenger
+     */
     function assignPoints(uint256 badgeId, address passenger) public {
         require(isOwner(badgeId, passenger), "You can only assign points to your own tokens.");
         passengers[badgeId].rewardPoints += DEFAULT_REWARD_POINTS;
         totalPointsDistributed += DEFAULT_REWARD_POINTS;
         emit RewardsPointsAssigned(badgeId, passenger, DEFAULT_REWARD_POINTS);
-
-        // TODO remove log
-        console.log(
-            "Points assigned = %s | total amount of = %s",
-             DEFAULT_REWARD_POINTS, 
-             passengers[badgeId].rewardPoints
-        ); 
     }
 
+    /**
+     * Provide rewards ERC20 tokens to the passenger
+     * @param passenger address of the passenger
+     */
     function transferERC20Rewards(address passenger) private onlyOwner {
         require(erc20Token.balanceOf(owner()) >= DEFAULT_REWARD_POINTS, "Insufficient balance");
         erc20Token.transferRewards(passenger, DEFAULT_REWARD_POINTS);
@@ -197,6 +210,10 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     // ----------------------------------------------------------------------------------------------------------------
     // Dev methods
     // ----------------------------------------------------------------------------------------------------------------
+    
+    /**
+     * @return badgeId id of the soulbound token
+     */
     function getBadgeId() external view returns (uint256) {
         uint256 badgeCount = balanceOf(msg.sender);
         require(badgeCount > 0, "No token owned by sender");
@@ -205,16 +222,26 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
         return badgeId;
     }
 
-    function getPoints() public view returns (uint256) {
-        require(balanceOf(msg.sender) > 0, "No token owned by sender");
-        uint256 badgeId = tokenOfOwnerByIndex(msg.sender, 0);
+    /**
+     * @param passenger address of the passenger 
+     * @return rewardPoints rewards points of the soulbound token
+     */
+    function getPoints(address passenger) public view returns (uint256) {
+        require(balanceOf(passenger) > 0, "No token owned by sender");
+        uint256 badgeId = tokenOfOwnerByIndex(passenger, 0);
 
         require (passengers[badgeId].passenger == address(0), "It was not possible to get rewards points by badgeId.");
         return passengers[badgeId].rewardPoints;
     }
 
-    function getTokensRewards() public view returns (uint256) {
-        return erc20Token.balanceOf(msg.sender);
+    /**
+     * @param passenger address of the passenger 
+     * @return rewardTokens rewards ERC20 tokens
+     */
+    function getTokensRewards(address passenger) public view returns (uint256) {
+        uint256 rewardTokens = balanceOf(passenger);
+        require(rewardTokens > 0, "No token owned by sender");
+        return rewardTokens;
     }
 
     function getTotalPointsDistributed() public view returns (uint256) {
