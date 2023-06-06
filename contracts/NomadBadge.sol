@@ -22,7 +22,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     // Variables and Struts
     // ----------------------------------------------------------------------------------------------------------------
     Counters.Counter private badgeIdCounter;
-    uint256 public constant DEFAULT_REWARD_POINTS = 1000;
+    uint256 public constant DEFAULT_REWARD_POINTS = 1500;
     uint256 private totalPointsDistributed = 0;
 
     enum FlightRewardStatus {
@@ -194,14 +194,29 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
         erc20Token.transferRewards(passenger, DEFAULT_REWARD_POINTS);
     }
 
-    function getPoints(uint256 badgeId) public view returns (uint256) {
+    // ----------------------------------------------------------------------------------------------------------------
+    // Dev methods
+    // ----------------------------------------------------------------------------------------------------------------
+    function getBadgeId() external view returns (uint256) {
+        uint256 badgeCount = balanceOf(msg.sender);
+        require(badgeCount > 0, "No token owned by sender");
+
+        uint256 badgeId = tokenOfOwnerByIndex(msg.sender, 0);
+        return badgeId;
+    }
+
+    function getPoints() public view returns (uint256) {
+        require(balanceOf(msg.sender) > 0, "No token owned by sender");
+        uint256 badgeId = tokenOfOwnerByIndex(msg.sender, 0);
+
         require (passengers[badgeId].passenger == address(0), "It was not possible to get rewards points by badgeId.");
         return passengers[badgeId].rewardPoints;
     }
 
-    // ----------------------------------------------------------------------------------------------------------------
-    // Dev methods
-    // ----------------------------------------------------------------------------------------------------------------
+    function getTokensRewards() public view returns (uint256) {
+        return erc20Token.balanceOf(msg.sender);
+    }
+
     function getTotalPointsDistributed() public view returns (uint256) {
         return totalPointsDistributed;
     }
@@ -209,4 +224,5 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     function getTotalBadgesMinted() public view returns (uint256) {
         return badgeIdCounter.current();
     }
+
 }
