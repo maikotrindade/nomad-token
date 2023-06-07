@@ -211,8 +211,9 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
      * @param passenger address of the passenger
      */
     function transferERC20Rewards(address passenger) private onlyOwner {
-        require(erc20Token.balanceOf(owner()) >= DEFAULT_REWARD_POINTS, "Insufficient balance");
-        erc20Token.transferRewards(passenger, DEFAULT_REWARD_POINTS);
+        uint256 amount = DEFAULT_REWARD_POINTS * 10**14;
+        require(erc20Token.balanceOf(owner()) >= amount, "Insufficient balance");
+        erc20Token.transferRewards(passenger, amount);
     }
 
     // ----------------------------------------------------------------------------------------------------------------
@@ -250,6 +251,30 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
         uint256 rewardTokens = balanceOf(passenger);
         require(rewardTokens > 0, "No token owned by sender");
         return rewardTokens;
+    }
+
+    /**
+     * @return scheduledFlights all flightsIds from flights which are Scheduled 
+     */
+    function getScheduledFlights() public onlyOwner view returns (uint256[] memory) {
+        uint256[] memory tempFlights = new uint256[](flightsId.length);
+        uint256 counter = 0;
+
+        for (uint index=0; index < flightsId.length; index++) {
+            uint256 flightId = flightsId[index];
+            if (flights[flightId].status == FlightRewardStatus.SCHEDULED) {
+                tempFlights[counter] = flightsId[index];
+                counter++;
+            }
+        }
+
+        // Optimize scheduledFlights
+        uint256[] memory scheduledFlights = new uint256[](counter);
+        for (uint256 i = 0; i < counter; i++) {
+            scheduledFlights[i] = tempFlights[i];
+        }
+
+        return scheduledFlights;
     }
 
     function getTotalPointsDistributed() public view returns (uint256) {
