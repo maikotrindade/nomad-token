@@ -25,11 +25,12 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     uint256 private totalPointsDistributed = 0;
 
     enum FlightRewardStatus {
-        READY,
-        CANCELLED,
         SCHEDULED,
-        REWARDED,
-        UNKNOWN
+        ACTIVE,
+        LANDED,
+        CANCELLED,
+        INCIDENT,
+        DIVERTED
     }
 
     struct Flight {
@@ -66,6 +67,13 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
         erc20Token = NomadRewardToken(erc20Address);
     }
     
+    /**
+     * the token is being issued or minted and not transferred according to Soubound token specs
+     * @param from payer
+     * @param to receiver
+     * @param badgeId id of the soulbound token
+     * @param batchSize part of a consecutive (batch) mint
+     */
     function _beforeTokenTransfer(address from, address to, uint256 badgeId, uint256 batchSize) 
         internal 
         override(ERC721, ERC721Enumerable) virtual {
@@ -165,7 +173,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
     function runRewardProcess() public onlyOwner {
         for (uint index=0; index < flightsId.length; index++) {
             uint256 flightId = flightsId[index];
-            if (flights[flightId].status == FlightRewardStatus.READY) {
+            if (flights[flightId].status == FlightRewardStatus.ACTIVE) {
                 uint256 badgeId = badgeIdCounter.current();
                 require(!_exists(badgeId), "Token already exists");
 
