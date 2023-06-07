@@ -3,9 +3,7 @@
   "version": "0.0.1",
   "description": "Smart contract that facilitates travel rewards programs for users to earn and redeem rewards for their travel activities",
   "main": "index.js",
-  "scripts": {
-    "test": "npx hardhat test"
-  },
+  "scripts": {},
   "author": "@maikotrindade",
   "license": "MIT",
   "devDependencies": {
