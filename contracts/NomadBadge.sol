@@ -30,7 +30,8 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
         LANDED,
         CANCELLED,
         INCIDENT,
-        DIVERTED
+        DIVERTED,
+        REWARDED
     }
 
     struct Flight {
@@ -183,6 +184,7 @@ contract NomadBadge is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keep
                 tokenURI(badgeId);
                 passengers[badgeId].passenger = passenger;
 
+                flights[flightId].status = FlightRewardStatus.REWARDED;
                 emit RewardsProvided(passenger);
                 assignPoints(badgeId, passenger);
                 transferERC20Rewards(passenger);
