@@ -1,5 +1,5 @@
 # Nomad Token
-Solidity smart contracts `NomadBadge` and `NomadRewardToken`
+Solidity smart contracts `NomadBadge` and `NomadRewardToken` - Chainlink hackathon spring 2023
 
 ### Architecture
 ![diagram](https://github.com/maikotrindade/nomad-token/assets/3600906/9b704bd8-cf9c-4d58-94f4-5325c132d03e)
