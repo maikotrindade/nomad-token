@@ -45,4 +45,5 @@ Server location: [nomad-core.herokuapp.com](https://nomad-core.herokuapp.com/)
 
 ## Frontend - nomad-app
 tech stack: kotlin, kotlinx-coroutines, jetpack compose, firebase-crashlytics, firebase-auth-ktx, accompanist-flowlayout, compose.material3, okhttp3, retrofit2
+
 Google Play: [Nomad Rewards App](https://play.google.com/store/apps/details?id=io.github.maikotrindade.nomadrewards)
