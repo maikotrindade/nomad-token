@@ -9,11 +9,13 @@ Solidity smart contracts `NomadBadge` and `NomadRewardToken`
 - [Nomad core](https://github.com/maikotrindade/nomad-core) - Backend
 - [Nomad app](https://github.com/maikotrindade/nomad-app) - Frontend
 
-## Installing dependencies
+## Smart contracts - nomad-token
+tech stack: solidity, typescript, javascript, chainlink, openzeppelin, hardhat, npm
+
+### Installing dependencies
 ```
 npm install
 ```
-
 ### Setup secrets
 ````
 ALCHEMY_KEY = ...
@@ -24,8 +26,22 @@ PORT=...
 AVIATIONSTACK_ACCESS_KEY = ...
 ````
 
-## Deploying the contract
+### Deploying the contract
 You can target any network from your Hardhat config using:
 ```
 npx hardhat run --network sepolia scripts/deploy.ts
 ```
+
+## Backend - nomad-core
+tech stack: typescript, javascript, nodejs, alchemysdk, ethersjs, mongoose, express, dotenv, node-cron, heroku, heroku-scheduler, axios, cors, helmet, nodemon, compression
+
+### Scripts
+`node` server.ts
+
+### Server
+`heroku logs --tail`
+Server location: [nomad-core.herokuapp.com](https://nomad-core.herokuapp.com/)
+
+
+## Frontend - nomad-app
+tech stack: kotlin, kotlinx-coroutines, jetpack compose, firebase-crashlytics, firebase-auth-ktx, accompanist-flowlayout, compose.material3, okhttp3, retrofit2
