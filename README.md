@@ -1,7 +1,8 @@
 # Nomad Token
 Solidity smart contracts `NomadBadge` and `NomadRewardToken`
 
-![diagram](https://github.com/maikotrindade/nomad-token/assets/3600906/b6a08deb-b30f-45b8-be2a-2f59ee7503b8)
+### Architecture
+![diagram](https://github.com/maikotrindade/nomad-token/assets/3600906/9b704bd8-cf9c-4d58-94f4-5325c132d03e)
 
 ### Repositories
 - [Nomad Token](https://github.com/maikotrindade/nomad-token) - Smart contracts
