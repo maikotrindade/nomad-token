@@ -13,6 +13,9 @@ Solidity smart contracts `NomadBadge` and `NomadRewardToken` - Chainlink hackath
 - [Nomad core](https://github.com/maikotrindade/nomad-core) - Backend
 - [Nomad app](https://github.com/maikotrindade/nomad-app) - Frontend
 
+### Tech notes (Youtube video)
+[![Nomad token - tech notes](https://img.youtube.com/vi/PA-N81MMPu8/0.jpg)]([https://www.youtube.com/watch?v=PA-N81MMPu8](https://www.youtube.com/watch?v=PA-N81MMPu8))
+
 ## Smart contracts - nomad-token
 tech stack: solidity, typescript, javascript, chainlink, openzeppelin, hardhat, npm
 
