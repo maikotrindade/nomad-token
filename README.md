@@ -1,6 +1,9 @@
 # Nomad Token
 Solidity smart contracts `NomadBadge` and `NomadRewardToken` - Chainlink hackathon spring 2023
 
+* `NomadBadge (NBG)`: [https://sepolia.etherscan.io/address/0x487e0Fc813e4e529AFBb464ECD910Bdb1ddDdbdd](https://sepolia.etherscan.io/address/0x487e0Fc813e4e529AFBb464ECD910Bdb1ddDdbdd)
+* `NomadRewardToken (NRT)`: [https://sepolia.etherscan.io/address/0x0ab9cDa8A48901d51D1F6D33296E269f0F6cf084](https://sepolia.etherscan.io/address/0x0ab9cDa8A48901d51D1F6D33296E269f0F6cf084)
+
 ### Architecture
 ![diagram](https://github.com/maikotrindade/nomad-token/assets/3600906/9b704bd8-cf9c-4d58-94f4-5325c132d03e)
 
